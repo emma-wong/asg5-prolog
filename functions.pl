@@ -89,5 +89,9 @@ WritePath( [Flight(Depart, Arrive, time(Hr, Min)) |List]  ) :-
 	format('%2d:%2d', [Hr1, Min1]),nl,
 	WritePath(List).
 	
+% -- Main Call (Still need to implement edge cases)
+fly( Depart, Arrive ) :-
+	ListPath(Depart, Arrive, Outlist), nl,
+	WritePath(Outlist), !.
 	
 
