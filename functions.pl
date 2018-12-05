@@ -13,11 +13,9 @@ haversine_radians( Lat1, Lon1, Lat2, Lon2, Distance ) :-
    Dist is 2 * atan2( sqrt( A ), sqrt( 1 - A )),
    Distance is Dist * 3959.
 
-
 % -- Degree-Minutes-Seconds to Radians
 dmsToRads( degmin( Deg, Min ), RetVal) :-
 	RetVal is ((Deg + Min/60) * pi) / 180.
-
 
 % -- NOT in prolog
 not( X ) :- X, !, fail.
@@ -46,7 +44,6 @@ flightTime( A1, A2, time(RetHours, RetMinutes)) :-
 	RetHours is floor(TotalTime),
 	RetMinutes is floor((TotalTime-RetHours)*60).
 	
-
 % -- Given a flight return the arrival time
 flightArrivalTime( flight(Depart, Arrive, time(Hr, Min)), ArrivalTime) :-
 	flightTime(Depart, Arrive, FT),
@@ -77,6 +74,7 @@ ListPath(Node, End, Time, Tried, [flight(Node, Next, Dep)|List]) :-
 	not( member(Next, Tried)),
 	ListPath(Next, End, ArrivalTime, [Next|Tried], List). 
 
+% -- Recursive Print Function
 WritePath( [] ) :- nl.
 
 WritePath( [Flight(Depart, Arrive, time(Hr, Min)) |List]  ) :-
