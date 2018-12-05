@@ -76,7 +76,18 @@ ListPath(Node, End, Time, Tried, [flight(Node, Next, Dep)|List]) :-
 	checkForOvernight( flight(Node, Next, Dep)),
 	not( member(Next, Tried)),
 	ListPath(Next, End, ArrivalTime, [Next|Tried], List). 
-	
-	
 
+WritePath( [] ) :- nl.
+
+WritePath( [Flight(Depart, Arrive, time(Hr, Min)) |List]  ) :-
+	airport(Depart, DName, _,_),
+	airport(Arrive, AName, _,_),
+	format('depart  %s  %s', [Depart, DName]),
+	format('%2d:%2d', [Hr, Min]),nl,
+	flightArrivalTime( flight(Depart, Arrive, time(Hr, Min)), time(Hr1, Min1)),
+	format('arrive  %s  %s', [Arrive, AName]),
+	format('%2d:%2d', [Hr1, Min1]),nl,
+	WritePath(List).
+	
+	
 
