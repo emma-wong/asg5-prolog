@@ -22,18 +22,20 @@ not( X ) :- X, !, fail.
 not( _ ).
 
 % -- add two times
-sumTimes( time(h1, m1), time(h2, m2), time(retHr, retMin) ) :-
-	retHr is h1+h2,
-	retMin is m1+m2,
-	% !(min > 60)
-	retHr is retHr + floor(retMin / 60),
-	retMin is mod(retMin, 60).
+sumTimes(time(H_A,M_A), time(H_B,M_B), time(H_C,M_C)) :-
+  H_T is H_A + H_B,
+  M_T is M_A + M_B,
+  adjustTime(H_T, M_T, H_C, M_C).
+
+adjustTime(H1, M1, H2, M2) :-
+    H2 is H1 + floor(M1 / 60),
+    M2 is mod(M1, 60).
 
 % -- given airport Get airport Latitude and Longitude in radians
-getAirportLocation(Airport1, retLat, retLon) :-
-	airport(Airport1, _, degmin(a1, o1), degmin(a2, o2)),
-	dmsToRads(a1, o1, retLat),
-	dmsToRads(a2, o2, retLon).
+getAirportLocation(Airport1, RetLat, RetLon) :-
+	airport(Airport1, _, degmin(A1, O1), degmin(A2, O2)),
+	dmsToRads(degmin(A1, O1), RetLat),
+	dmsToRads(degmin(A2, O2), RetLon).
 
 % -- returns length of flight between two airports
 flightTime( A1, A2, time(RetHours, RetMinutes)) :-
@@ -56,28 +58,27 @@ validDelayTimes( time(H1, M1), time(H2, M2)) :-
 	Minutes1 + 29 < Minutes2.
 
 % -- There are no overnight trips
-checkForOvernight( flight(Depart, Arrive, DepTime) ) :-
-	flightArrivalTime( flight(Depart, Arrive, DepTime), flight(Hr, Min) ),
+checkForOvernight( flight(Depart, Arrive, time(Hr, Min)) ) :-
 	Hr < 24.
 
 % -- ListPath, a modified version of provided code
-ListPath(Node, End, Outlist) :-
-	ListPath(Node, End, time(0,0), [Node], Outlist).
+listpath(Node, End, Outlist ) :-
+	listpath(Node, End, time(0,0), [Node], Outlist).
 
-ListPath(Node, Node, _,_,_).
+listpath(Node, Node, _,_,_).
 
-ListPath(Node, End, Time, Tried, [flight(Node, Next, Dep)|List]) :-
+listpath(Node, End, Time, Tried, [flight(Node, Next, Dep)|List]) :-
 	flight(Node, Next, Dep),
 	validDelayTimes(Time, Dep),
 	flightArrivalTime( flight(Node, Next, Dep), ArrivalTime),
 	checkForOvernight( flight(Node, Next, Dep)),
 	not( member(Next, Tried)),
-	ListPath(Next, End, ArrivalTime, [Next|Tried], List). 
+	listpath(Next, End, ArrivalTime, [Next|Tried], List). 
 
 % -- Recursive Print Function
-WritePath( [] ) :- nl.
+writePath( [] ).
 
-WritePath( [Flight(Depart, Arrive, time(Hr, Min)) |List]  ) :-
+writePath( [ flight(Depart, Arrive, time(Hr, Min)) |List]  ) :-
 	airport(Depart, DName, _,_),
 	airport(Arrive, AName, _,_),
 	format('depart  %s  %s', [Depart, DName]),
@@ -85,11 +86,23 @@ WritePath( [Flight(Depart, Arrive, time(Hr, Min)) |List]  ) :-
 	flightArrivalTime( flight(Depart, Arrive, time(Hr, Min)), time(Hr1, Min1)),
 	format('arrive  %s  %s', [Arrive, AName]),
 	format('%2d:%2d', [Hr1, Min1]),nl,
-	WritePath(List).
+	writePath(List).
 	
-% -- Main Call (Still need to implement edge cases)
+% -- Edge Cases
+fly( Depart, Depart ) :-
+  !, fail.
+
+fly( Depart, _) :-
+  not(airport( Depart, _,_,_) ),
+  !, fail.
+
+fly( _, Arrive) :-
+  not( airport( Arrive, _, _,_)),
+  !, fail.
+
+% -- Main Call
 fly( Depart, Arrive ) :-
-	ListPath(Depart, Arrive, Outlist), nl,
-	WritePath(Outlist), !.
+	listpath( Depart, Arrive, Outlist ), nl,
+	writePath( Outlist), !.
 	
 
